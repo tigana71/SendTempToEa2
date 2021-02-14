@@ -55,18 +55,22 @@ void setup() {
 void loop() {
 	// read sensor and calculate bl999_data[3][4][5] for skeep temperature	
 	sensor.read();												//  read data from sensor
-	int temperature = (int)10 * sensor.tem;
-	int humidity = (int)10 * sensor.hum;
-	bl999_data[3] = (int)(temperature & 15);
-	bl999_data[4] = (int)((temperature & 240) >> 4);
-	bl999_data[5] = (int)((temperature & 3840) >> 8);
-	bl999_data[6] = (int)(humidity & 15);
-	bl999_data[7] = (int)((humidity & 240) >> 4);
+	int temperature = (int)10*sensor.tem;
+	int humidity = (int)10*sensor.hum;
 	
 	Serial.print("T from sensor: ");
 	Serial.print(temperature);
 	Serial.print(", H from sensor: ");
 	Serial.println(humidity);
+
+
+
+	bl999_data[3] = (int)(temperature & 15);
+	bl999_data[4] = (int)((temperature & 240) >> 4);
+	bl999_data[5] = (int)((temperature & 3840) >> 8);
+	bl999_data[6] = (int)(humidity & 15);
+	bl999_data[7] = (int)((humidity & 240) >> 4);
+		
 
 	// recalculate temperature for checking
 	int temp = (((int)bl999_data[5] << 8)
@@ -78,8 +82,8 @@ void loop() {
 		//clear higher bits and convert to negative
 		temp = -1 * (temp & 4095);
 	}
-	if (temp |= temperature) {
-		Serial.println(" Check calculation of temperature");
+	if (temperature != temp) {
+		Serial.println(" Ckeck temperature sensor ");
 	}
 
 
