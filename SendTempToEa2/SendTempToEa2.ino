@@ -54,23 +54,21 @@ void setup() {
 }
 void loop() {
 	// read sensor and calculate bl999_data[3][4][5] for skeep temperature	
+	// Humidity is stored bl999_data[6][7]
 	sensor.read();												//  read data from sensor
 	int temperature = (int)10*sensor.tem;
-	int humidity = (int)10*sensor.hum;
+	int humidity = (int)sensor.hum;
 	
-	Serial.print("T from sensor: ");
-	Serial.print(temperature);
-	Serial.print(", H from sensor: ");
-	Serial.println(humidity);
-
-
-
 	bl999_data[3] = (int)(temperature & 15);
 	bl999_data[4] = (int)((temperature & 240) >> 4);
 	bl999_data[5] = (int)((temperature & 3840) >> 8);
 	bl999_data[6] = (int)(humidity & 15);
 	bl999_data[7] = (int)((humidity & 240) >> 4);
 		
+	Serial.print("T from sensor: ");
+	Serial.print(temperature);
+	Serial.print(", H from sensor: ");
+	Serial.println(humidity);
 
 	// recalculate temperature for checking
 	int temp = (((int)bl999_data[5] << 8)
@@ -85,8 +83,16 @@ void loop() {
 	if (temperature != temp) {
 		Serial.println(" Ckeck temperature sensor ");
 	}
+	// recalculate humidity for checking
+	int hum = ((int)bl999_data[7] << 4) | (int)bl999_data[6];
 
 
+	//negative number, use two's compliment conversion
+	//hum = ~hum + 1;
+
+	//humidity is stored as 100 - humidity
+	//hum = 100 - (byte)hum;
+	Serial.println(hum);
 
 	// проверяем номер канала
 	//	int temp = ((bl999_data[1] & 1) << 1) | ((bl999_data[1] & 2) >> 1);
