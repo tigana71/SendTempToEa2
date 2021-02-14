@@ -51,6 +51,9 @@ void setup() {
 	Serial.begin(9600);
 	sensor.begin();												//  initialise sensor AM2320
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
+	bl999_data[0] = 8;											// 1000
+	bl999_data[1] = 7;											// 0111	PowerUUID=100001=33 + chanel 11=3
+	bl999_data[2] = 4;											// battery condition ???? =0100
 }
 void loop() {
 	// read sensor and calculate bl999_data[3][4][5] for skeep temperature	
@@ -65,10 +68,10 @@ void loop() {
 	bl999_data[6] = (int)(humidity & 15);
 	bl999_data[7] = (int)((humidity & 240) >> 4);
 		
-	Serial.print("T from sensor: ");
-	Serial.print(temperature);
-	Serial.print(", H from sensor: ");
-	Serial.println(humidity);
+	//Serial.print("T from sensor: ");
+	//Serial.print(temperature);
+	//Serial.print(", H from sensor: ");
+	//Serial.println(humidity);
 
 	// recalculate temperature for checking
 	int temp = (((int)bl999_data[5] << 8)
@@ -85,50 +88,41 @@ void loop() {
 	}
 	// recalculate humidity for checking
 	int hum = ((int)bl999_data[7] << 4) | (int)bl999_data[6];
-
-
-	//negative number, use two's compliment conversion
-	//hum = ~hum + 1;
-
-	//humidity is stored as 100 - humidity
-	//hum = 100 - (byte)hum;
-	Serial.println(hum);
-
+	if (humidity != hum) {
+		Serial.println(" Ckeck humidity sensor ");
+	}
 	// проверяем номер канала
-	//	int temp = ((bl999_data[1] & 1) << 1) | ((bl999_data[1] & 2) >> 1);
-	
-	// Вычисляем check sum
-		//Sum first 8 nibbles
+	//temp = ((bl999_data[1] & 1) << 1) | ((bl999_data[1] & 2) >> 1);
+	//Serial.println(" Channel number ");
+	//Serial.println(temp);
+
+	// Calculate check sum
+	//Sum first 8 nibbles
 	unsigned int sum = 0;
 	for (int i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
 		sum += bl999_data[i];
 	}
 	//clear higher bits
 	sum &= 15;
-	delay(10000);
-	// отправляем даннаые 
-		//static byte bl999_data[BL999_DATA_ARRAY_SIZE] = {5, 7, 0, 1, 7, 0, 15, 15, 0};
-		// 5 7 0 1 7 0 15 15 3
-		//
-		//Serial.println();
-		//for (byte i = 0; i < 3; i++) {
+	bl999_data[8] = (int)sum;
+	
+	// send  data
+	for (int i = 0; i < BL999_DATA_ARRAY_SIZE; i++) {
+		Serial.print((bl999_data[i] >> 1) & 1);
+		Serial.print((bl999_data[i] >> 2) & 1);
+		Serial.print((bl999_data[i] >> 3) & 1);
+		Serial.print((bl999_data[i] >> 4) & 1);
+	}
+	Serial.println();
+	delay(30000);
 		//    digitalWrite(prd, HIGH);
 		//    delay(550); 
 		//    digitalWrite(prd, LOW);
 		//    delay(9000);
-		//    for (byte i = 0; i < BL999_DATA_ARRAY_SIZE; i++) {
-		//        digitalWrite(prd, HIGH);
-		//        delay(550); 
-		//        digitalWrite(prd, LOW);
-		//        delay(9000); 
-		//        Serial.print(bl999_data[i], BIN);
-		//    }
-		//}
+		//
 	// Смотрим что показывает метео станция
 
 
-
-		//  delay(30000);                                             //  приостанавливаем выполнение скетча на 30 секунду
 
 
 
