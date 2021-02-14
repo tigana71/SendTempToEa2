@@ -5,24 +5,24 @@
 */
 // Some reference material
 // we record pulses
-// 010101110000111101110000111111111100
+// 0101 0111 0010 1111 1100 1000 1111 1111 1011
 
 // Write them to bl999_data
 // 1010     !! = 10 !! 4 bit ID of remote sensor
 // 1110     !! = 14 !!+2 bit ID of remote sensor 101011=43 + 01 = 1 number of chanal
-// 0000     !! = 0  !! battery condition
+// 0100     !! = 0  !! battery condition
 // 1111     !! = 15 !! temperature
-// 1110     !! = 14 !! temperature
-// 0000     !! = 0  !! temperature below zero
+// 0011     !! = 14 !! temperature
+// 0001     !! = 0  !! temperature below zero
 // 1111     !! = 15 !! humidity
 // 1111     !! = 15 !! humidity
-// 0011     !! = 3  !! check sum
+// 1101     !! = 3 ????? !! check sum
 
 // Data below correspond to
 // Channel: 1
 // PowerUUID: 43
 // Battery is Ok
-// Temperature: 23.90
+// Temperature: 31.90
 // Humidity: 99%
 
 #include <Wire.h>
@@ -53,43 +53,40 @@ void setup() {
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
 }
 void loop() {
-	//читаем сенсор и правильно кладем температуру и влажность в bl999_data	
+	// read sensor and calculate bl999_data[3][4][5] for skeep temperature	
 	sensor.read();												//  read data from sensor
 	int temperature = (int)10 * sensor.tem;
-	//temperature = 239;
 	int humidity = (int)10 * sensor.hum;
-
 	bl999_data[3] = (int)(temperature & 15);
-	Serial.println((int)bl999_data[3], BIN);
-	Serial.println(temperature);
-
 	bl999_data[4] = (int)((temperature & 240) >> 4);
-	Serial.println((int)bl999_data[4], BIN);
-	Serial.println(temperature);
-
 	bl999_data[5] = (int)((temperature & 3840) >> 8);
-	Serial.println((int)bl999_data[5], BIN);
-	Serial.println(temperature);
+	bl999_data[6] = (int)(humidity & 15);
+	bl999_data[7] = (int)((humidity & 240) >> 4);
+	
+	Serial.print("T from sensor: ");
+	Serial.print(temperature);
+	Serial.print(", H from sensor: ");
+	Serial.println(humidity);
 
-
-	//	Serial.print("T: ");
-	//	Serial.print(sensor.tem);
-	//	Serial.print(", H: ");
-	//	Serial.println(sensor.hum);
-
-	// провер€ем номер канала
-	//	int temp = ((bl999_data[1] & 1) << 1) | ((bl999_data[1] & 2) >> 1);
-	// провер€ем температуру
+	// recalculate temperature for checking
 	int temp = (((int)bl999_data[5] << 8)
 		| ((int)bl999_data[4] << 4)
 		| (int)bl999_data[3]);
-	if ((bl999_data[5] & 1) == 1) {
+	if ((bl999_data[5] >> 2) == 3) {
 		//negative number, use two's compliment conversion
 		temp = ~temp + 1;
 		//clear higher bits and convert to negative
 		temp = -1 * (temp & 4095);
 	}
-	Serial.println(temp);
+	if (temp |= temperature) {
+		Serial.println(" Check calculation of temperature");
+	}
+
+
+
+	// провер€ем номер канала
+	//	int temp = ((bl999_data[1] & 1) << 1) | ((bl999_data[1] & 2) >> 1);
+	
 	// ¬ычисл€ем check sum
 		//Sum first 8 nibbles
 	unsigned int sum = 0;
