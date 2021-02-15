@@ -106,26 +106,69 @@ void loop() {
 	sum &= 15;
 	bl999_data[8] = (int)sum;
 	
-	// send  data
-	for (int i = 0; i < BL999_DATA_ARRAY_SIZE; i++) {
-		Serial.print((bl999_data[i] >> 1) & 1);
-		Serial.print((bl999_data[i] >> 2) & 1);
-		Serial.print((bl999_data[i] >> 3) & 1);
-		Serial.print((bl999_data[i] >> 4) & 1);
+	// send  data x2
+	for (int j = 0; j < 2; j++) {
+		// send start bit
+		//digitalWrite(prd, HIGH);
+		//delay(BL999_DIVIDER_PULSE_LENGTH); 
+		//digitalWrite(prd, LOW);
+		//delay(BL999_START_BIT_LENGTH);
+		for (int i = 0; i < BL999_DATA_ARRAY_SIZE; i++) {
+			if (Serial.print(bl999_data[i] & 1)) {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_1_LENGTH);
+			}
+			else {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_0_LENGTH);
+			}
+			if (Serial.print((bl999_data[i] >> 1) & 1)) {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_1_LENGTH);
+			}
+			else {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_0_LENGTH);
+			}
+			if (Serial.print((bl999_data[i] >> 2) & 1)) {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_1_LENGTH);
+			}
+			else {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_0_LENGTH);
+			}
+			if (Serial.print((bl999_data[i] >> 3) & 1)) {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_1_LENGTH);
+			}
+			else {
+				//digitalWrite(prd, HIGH);
+				//delay(BL999_DIVIDER_PULSE_LENGTH); 
+				//digitalWrite(prd, LOW);
+				//delay(BL999_BIT_0_LENGTH);
+			}
+
+
+
+		}
 	}
 	Serial.println();
 	delay(30000);
-		//    digitalWrite(prd, HIGH);
-		//    delay(550); 
-		//    digitalWrite(prd, LOW);
-		//    delay(9000);
-		//
 	// Смотрим что показывает метео станция
-
-
-
-
-
-
 }
 
