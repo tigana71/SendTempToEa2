@@ -48,127 +48,21 @@ iarduino_AM2320 sensor;									//  iarduino_AM2320
 static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	sensor.begin();												//  initialise sensor AM2320
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
-	bl999_data[0] = 8;											// 1000
-	bl999_data[1] = 7;											// 0111	PowerUUID=100001=33 + chanel 11=3
-	bl999_data[2] = 4;											// battery condition ???? =0100
+	bl999_data[0] = 15;											// 1010
+	bl999_data[1] = 15;											// 0111	PowerUUID=101001=43 + chanel 01=1
+	bl999_data[2] = 15;											// battery condition ???? =0000
+	bl999_data[3] = 15; //(int)(temperature & 15);
+	bl999_data[4] = 15; //(int)((temperature & 240) >> 4);
+	bl999_data[5] = 15; //(int)((temperature & 3840) >> 8);
+	bl999_data[6] = 15; //(int)(humidity & 15);
+	bl999_data[7] = 15; //(int)((humidity & 240) >> 4);
 }
 void loop() {
-	// read sensor and calculate bl999_data[3][4][5] for skeep temperature	
-	// Humidity is stored bl999_data[6][7]
-	sensor.read();												//  read data from sensor
-	int temperature = (int)10*sensor.tem;
-	int humidity = (int)sensor.hum;
 	
-	bl999_data[3] = (int)(temperature & 15);
-	bl999_data[4] = (int)((temperature & 240) >> 4);
-	bl999_data[5] = (int)((temperature & 3840) >> 8);
-	bl999_data[6] = (int)(humidity & 15);
-	bl999_data[7] = (int)((humidity & 240) >> 4);
 		
-	//Serial.print("T from sensor: ");
-	//Serial.print(temperature);
-	//Serial.print(", H from sensor: ");
-	//Serial.println(humidity);
-
-	// recalculate temperature for checking
-	int temp = (((int)bl999_data[5] << 8)
-		| ((int)bl999_data[4] << 4)
-		| (int)bl999_data[3]);
-	if ((bl999_data[5] >> 2) == 3) {
-		//negative number, use two's compliment conversion
-		temp = ~temp + 1;
-		//clear higher bits and convert to negative
-		temp = -1 * (temp & 4095);
-	}
-	if (temperature != temp) {
-		Serial.println(" Ckeck temperature sensor ");
-	}
-	// recalculate humidity for checking
-	int hum = ((int)bl999_data[7] << 4) | (int)bl999_data[6];
-	if (humidity != hum) {
-		Serial.println(" Ckeck humidity sensor ");
-	}
-	// проверяем номер канала
-	//temp = ((bl999_data[1] & 1) << 1) | ((bl999_data[1] & 2) >> 1);
-	//Serial.println(" Channel number ");
-	//Serial.println(temp);
-
-	// Calculate check sum
-	//Sum first 8 nibbles
-	unsigned int sum = 0;
-	for (int i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
-		sum += bl999_data[i];
-	}
-	//clear higher bits
-	sum &= 15;
-	bl999_data[8] = (int)sum;
 	
-	// send  data x2
-	for (int j = 0; j < 2; j++) {
-		// send start bit
-		//digitalWrite(prd, HIGH);
-		//delay(BL999_DIVIDER_PULSE_LENGTH); 
-		//digitalWrite(prd, LOW);
-		//delay(BL999_START_BIT_LENGTH);
-		for (int i = 0; i < BL999_DATA_ARRAY_SIZE; i++) {
-			if (Serial.print(bl999_data[i] & 1)) {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_1_LENGTH);
-			}
-			else {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_0_LENGTH);
-			}
-			if (Serial.print((bl999_data[i] >> 1) & 1)) {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_1_LENGTH);
-			}
-			else {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_0_LENGTH);
-			}
-			if (Serial.print((bl999_data[i] >> 2) & 1)) {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_1_LENGTH);
-			}
-			else {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_0_LENGTH);
-			}
-			if (Serial.print((bl999_data[i] >> 3) & 1)) {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_1_LENGTH);
-			}
-			else {
-				//digitalWrite(prd, HIGH);
-				//delay(BL999_DIVIDER_PULSE_LENGTH); 
-				//digitalWrite(prd, LOW);
-				//delay(BL999_BIT_0_LENGTH);
-			}
-
-
-
-		}
-	}
-	Serial.println();
-	delay(30000);
-	// Смотрим что показывает метео станция
 }
 
