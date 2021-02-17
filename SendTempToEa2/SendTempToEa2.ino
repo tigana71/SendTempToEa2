@@ -47,6 +47,9 @@ iarduino_AM2320 sensor;									//  iarduino_AM2320
 
 static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+static volatile boolean bl999_sendallbits = false;
+static volatile boolean bl999_message_ready = false;
+
 void setup() {
 	Serial.begin(115200);
 	sensor.begin();												//  initialise sensor AM2320
@@ -61,7 +64,15 @@ void setup() {
 	bl999_data[7] = 15; //(int)((humidity & 240) >> 4);
 }
 void loop() {
-	
+	ms = millis();
+		// Ñîáûòèå ñğàáàòûâàşùåå êàæäûå 500 ìñ   
+		if ((ms - ms1) > 500 || ms < ms1) {
+			ms1 = ms;
+			// Èíâåğòèğóåì ñâåòîäèîä       
+			digitalWrite(13, led_stat);
+			led_stat = !led_stat;
+		}
+	}
 		
 	
 }
