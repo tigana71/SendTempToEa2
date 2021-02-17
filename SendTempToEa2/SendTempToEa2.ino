@@ -73,7 +73,24 @@ void loop() {
 			led_stat = !led_stat;
 		}
 	}
-		
-	
+
+boolean _bl999_nextbit(byte ii, byte jj) {
+	return ((bl999_data[ii] >> jj) & 1);
 }
+void _bl999_fillDataArray(byte bitNumber, byte value) {
+	byte dataArrayIndex = bitNumber / 4;
+	byte bitInNibble = bitNumber % 4;
+
+	if (bitInNibble == 0) {
+		// if it's the first bit in nibble -
+		// clear nibble since it could be filled with random data at this time
+		bl999_data[dataArrayIndex] = 0;
+	}
+
+	//Write all nibbles in reversed order
+	//so it will be easier to do calculations later
+	bl999_data[dataArrayIndex] |= (value << bitInNibble);
+}
+		
+
 
