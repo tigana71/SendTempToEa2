@@ -47,8 +47,14 @@ iarduino_AM2320 sensor;									//  iarduino_AM2320
 
 static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-//static volatile boolean bl999_sendallbits = false;
-//static volatile boolean bl999_message_ready = false;
+
+unsigned long timing = 0;
+unsigned long timingtocompare = 0;
+int pulseis = LOW;
+static volatile unsigned long timelenth = BL999_DIVIDER_PULSE_LENGTH;
+int bitnumber = 0;
+boolean startbit = true;
+
 
 void setup() {
 	Serial.begin(115200);
@@ -62,38 +68,58 @@ void setup() {
 	bl999_data[5] = 15; //(int)((temperature & 3840) >> 8);
 	bl999_data[6] = 15; //(int)(humidity & 15);
 	bl999_data[7] = 15; //(int)((humidity & 240) >> 4);
+	
+	int sum = 0;
+	for (byte i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
+		sum += bl999_data[i];
+	}
+	//clear higher bits
+	sum &= 15;
+	//returns true if calculated check sum matches received
+	bl999_data[BL999_DATA_ARRAY_SIZE - 1] = sum;
+	
+
 }
 void loop() {
-	unsigned long startHIpulselenth = millis();
-
-
-	ms = millis();
-		// Событие срабатывающее каждые 500 мс   
-		if ((ms - ms1) > 500 || ms < ms1) {
-			ms1 = ms;
-			// Инвертируем светодиод       
-			digitalWrite(13, led_stat);
-			led_stat = !led_stat;
+	delay(5);
+	timing = micros();
+	if ((timing - timingtocompare) > timelenth || timing < timingtocompare) {
+		timingtocompare = timing;
+		if (pulseis == HIGH) {
+			if (startbit) {
+				timelenth = BL999_START_BIT_LENGTH;
+				startbit = !startbit;
+				bitnumber = 0;
+			}
+			else {
+				if (1 == 0) {	// смотрим следующий бит
+					timelenth = BL999_BIT_0_LENGTH;
+				}
+				else {
+					timelenth = BL999_BIT_1_LENGTH;
+				}
+			}
 		}
+		else {
+			timelenth = BL999_DIVIDER_PULSE_LENGTH;
+			++bitnumber;
+			if (bitnumber > 35) {
+				bitnumber = 0;
+				startbit = true;
+				Serial.println("36 bit send");
+				delay(30000);
+				}
+		}
+		// Инвертируем pulseis
+		pulseis = !pulseis;
+		digitalWrite(prd, pulseis);
 	}
-
-boolean _bl999_nextbit(byte ii, byte jj) {
-	return ((bl999_data[ii] >> jj) & 1);
+	//if (timing > 30000) {
+	//	Serial.println(bitnumber);
+	//}
 }
-void _bl999_fillDataArray(byte bitNumber, byte value) {
-	byte dataArrayIndex = bitNumber / 4;
-	byte bitInNibble = bitNumber % 4;
 
-	if (bitInNibble == 0) {
-		// if it's the first bit in nibble -
-		// clear nibble since it could be filled with random data at this time
-		bl999_data[dataArrayIndex] = 0;
-	}
 
-	//Write all nibbles in reversed order
-	//so it will be easier to do calculations later
-	bl999_data[dataArrayIndex] |= (value << bitInNibble);
-}
 		
 
 
