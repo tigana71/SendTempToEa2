@@ -45,6 +45,9 @@ iarduino_AM2320 sensor;									//  iarduino_AM2320
 
 #define BL999_DATA_ARRAY_SIZE 9
 
+//36 bits are sent in packets by 4 bits (nibbles)
+#define BL999_BITS_PER_PACKET 4
+
 static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
@@ -60,20 +63,21 @@ void setup() {
 	Serial.begin(115200);
 	sensor.begin();												//  initialise sensor AM2320
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
-	bl999_data[0] = 15;											// 1010
+	bl999_data[0] = 0;											// 1010
 	bl999_data[1] = 15;											// 0111	PowerUUID=101001=43 + chanel 01=1
-	bl999_data[2] = 15;											// battery condition ???? =0000
+	bl999_data[2] = 0;											// battery condition ???? =0000
 	bl999_data[3] = 15; //(int)(temperature & 15);
-	bl999_data[4] = 15; //(int)((temperature & 240) >> 4);
+	bl999_data[4] = 0; //(int)((temperature & 240) >> 4);
 	bl999_data[5] = 15; //(int)((temperature & 3840) >> 8);
-	bl999_data[6] = 15; //(int)(humidity & 15);
+	bl999_data[6] = 0; //(int)(humidity & 15);
 	bl999_data[7] = 15; //(int)((humidity & 240) >> 4);
-	
+	bl999_data[8] = 0;
+
 	int sum = 0;
 	for (byte i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
 		sum += bl999_data[i];
 	}
-	//clear higher bits
+	// clear higher bits
 	sum &= 15;
 	//returns true if calculated check sum matches received
 	bl999_data[BL999_DATA_ARRAY_SIZE - 1] = sum;
@@ -92,7 +96,7 @@ void loop() {
 				bitnumber = 0;
 			}
 			else {
-				if (1 == 0) {	// смотрим следующий бит
+				if (_bl999_GetbitfromDataArray(bitnumber) == 0) {	// смотрим следующий бит
 					timelenth = BL999_BIT_0_LENGTH;
 				}
 				else {
@@ -103,12 +107,15 @@ void loop() {
 		else {
 			timelenth = BL999_DIVIDER_PULSE_LENGTH;
 			++bitnumber;
-			if (bitnumber > 35) {
+			if (bitnumber > 37) {
 				bitnumber = 0;
 				startbit = true;
-				Serial.println("36 bit send");
-				delay(30000);
+				Serial.println("  36 bit send");
+				for (byte i = 0; i < 36; i++) {
+					Serial.print(_bl999_GetbitfromDataArray(i));
 				}
+				delay(30000);
+			}
 		}
 		// Инвертируем pulseis
 		pulseis = !pulseis;
@@ -119,7 +126,17 @@ void loop() {
 	//}
 }
 
+byte _bl999_GetbitfromDataArray(byte bitNumber) {
+	byte dataArrayIndex = bitNumber / BL999_BITS_PER_PACKET;
+	byte bitInNibble = bitNumber % 4;
+		
+	//Serial.println(dataArrayIndex);
+	//Serial.println(bitInNibble);
+	//Serial.println((bl999_data[dataArrayIndex] >> bitInNibble) & 1);
 
+	return (bl999_data[dataArrayIndex] >> bitInNibble) & 1 ;
+}
 		
 
 
+// 0000 1111 1111 1111 1111 1111 1111 1111 1111
