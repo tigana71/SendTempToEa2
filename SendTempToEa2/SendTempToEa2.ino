@@ -53,17 +53,18 @@ static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 unsigned long timing = 0;
 unsigned long timingtocompare = 0;
-int pulseis = LOW;
+int pulseis = HIGH;
 static volatile unsigned long timelenth = BL999_DIVIDER_PULSE_LENGTH;
 int bitnumber = 0;
 boolean startbit = true;
+int j = 0;
 
 
 void setup() {
 	Serial.begin(115200);
 	sensor.begin();												//  initialise sensor AM2320
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
-	bl999_data[0] = 0;											// 1010
+	bl999_data[0] = 15;											// 1010
 	bl999_data[1] = 15;											// 0111	PowerUUID=101001=43 + chanel 01=1
 	bl999_data[2] = 0;											// battery condition ???? =0000
 	bl999_data[3] = 15; //(int)(temperature & 15);
@@ -72,7 +73,7 @@ void setup() {
 	bl999_data[6] = 0; //(int)(humidity & 15);
 	bl999_data[7] = 15; //(int)((humidity & 240) >> 4);
 	bl999_data[8] = 0;
-
+	
 	int sum = 0;
 	for (byte i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
 		sum += bl999_data[i];
@@ -85,7 +86,6 @@ void setup() {
 
 }
 void loop() {
-	delay(5);
 	timing = micros();
 	if ((timing - timingtocompare) > timelenth || timing < timingtocompare) {
 		timingtocompare = timing;
@@ -109,21 +109,23 @@ void loop() {
 			++bitnumber;
 			if (bitnumber > 37) {
 				bitnumber = 0;
+				++j;
 				startbit = true;
-				Serial.println("  36 bit send");
-				for (byte i = 0; i < 36; i++) {
-					Serial.print(_bl999_GetbitfromDataArray(i));
+				if (j > 1) {
+					j = 0;
+					Serial.println(" 36 bit send *4 ");
+					for (byte i = 0; i < 36; i++) {
+						Serial.print(_bl999_GetbitfromDataArray(i));
+					}
+					delay(30000);
 				}
-				delay(30000);
 			}
 		}
 		// Инвертируем pulseis
 		pulseis = !pulseis;
 		digitalWrite(prd, pulseis);
 	}
-	//if (timing > 30000) {
-	//	Serial.println(bitnumber);
-	//}
+	
 }
 
 byte _bl999_GetbitfromDataArray(byte bitNumber) {
@@ -138,5 +140,3 @@ byte _bl999_GetbitfromDataArray(byte bitNumber) {
 }
 		
 
-
-// 0000 1111 1111 1111 1111 1111 1111 1111 1111
