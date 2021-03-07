@@ -53,7 +53,7 @@ static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 unsigned long timing = 0;
 unsigned long timingtocompare = 0;
-int pulseis = HIGH;
+int pulseis = LOW;
 static volatile unsigned long timelenth = BL999_DIVIDER_PULSE_LENGTH;
 int bitnumber = 0;
 boolean startbit = true;
@@ -66,13 +66,13 @@ void setup() {
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
 	bl999_data[0] = 15;											// 1010
 	bl999_data[1] = 15;											// 0111	PowerUUID=101001=43 + chanel 01=1
-	bl999_data[2] = 0;											// battery condition ???? =0000
+	bl999_data[2] = 15;											// battery condition ???? =0000
 	bl999_data[3] = 15; //(int)(temperature & 15);
-	bl999_data[4] = 0; //(int)((temperature & 240) >> 4);
+	bl999_data[4] = 15; //(int)((temperature & 240) >> 4);
 	bl999_data[5] = 15; //(int)((temperature & 3840) >> 8);
-	bl999_data[6] = 0; //(int)(humidity & 15);
+	bl999_data[6] = 15; //(int)(humidity & 15);
 	bl999_data[7] = 15; //(int)((humidity & 240) >> 4);
-	bl999_data[8] = 0;
+	bl999_data[8] = 15;
 	
 	int sum = 0;
 	for (byte i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
@@ -88,6 +88,8 @@ void setup() {
 void loop() {
 	timing = micros();
 	if ((timing - timingtocompare) > timelenth || timing < timingtocompare) {
+		//Serial.println(timing - timingtocompare);
+		//Serial.println(pulseis);
 		timingtocompare = timing;
 		if (pulseis == HIGH) {
 			if (startbit) {
@@ -113,10 +115,12 @@ void loop() {
 				startbit = true;
 				if (j > 1) {
 					j = 0;
-					Serial.println(" 36 bit send *4 ");
+					Serial.println(" 36 bit send *2 ");
 					for (byte i = 0; i < 36; i++) {
 						Serial.print(_bl999_GetbitfromDataArray(i));
 					}
+					Serial.println();
+					Serial.println((String) "CEHCOP AM2320:  T=" + sensor.tem + "*C, PH=" + sensor.hum + "%");
 					delay(30000);
 				}
 			}
