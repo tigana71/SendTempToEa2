@@ -30,6 +30,7 @@
 
 iarduino_AM2320 sensor;									//  iarduino_AM2320
 #define prd 4											// pin DATA  FS1000A 
+#define CHANNEL_PIN A0
 
 //high pulse length of the bit's divider
 #define BL999_DIVIDER_PULSE_LENGTH 550
@@ -48,6 +49,11 @@ iarduino_AM2320 sensor;									//  iarduino_AM2320
 //36 bits are sent in packets by 4 bits (nibbles)
 #define BL999_BITS_PER_PACKET 4
 
+//for BL999 channel nmber only from 1 to 3
+int channel = 2;
+// https://cxem.net/arduino/arduino129.php
+
+
 static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
@@ -64,6 +70,27 @@ void setup() {
 	Serial.begin(115200);
 	sensor.begin();												//  initialise sensor AM2320
 	pinMode(prd, OUTPUT);										// pin mode for FS 1000A
+
+	// CANNEL NUMBER
+	int analogchannelValue = analogRead(CHANNEL_PIN);
+	//for BL999 channel nmber only from 1 to 3
+	int channel = 2;
+	// https://cxem.net/arduino/arduino129.php
+	if (analogchannelValue < 100) channel = 1;
+	else if (analogchannelValue < 900) channel = 3;
+	else channel = 2;
+
+	// POWER ID
+	randomSeed(analogchannelValue);
+	int PowerID = random(1, 64);
+		
+	// Check for errors and then delete
+	channel = 2;
+	Serial.println((String) "ValuePIN A0 =" + analogchannelValue + "Channel =" + channel + "PowerID =" + PowerID);
+	
+	
+
+
 	bl999_data[0] = 15;											// 1010
 	bl999_data[1] = 15;											// 0111	PowerUUID=101001=43 + chanel 01=1
 	bl999_data[2] = 15;											// battery condition ???? =0000
@@ -114,13 +141,23 @@ void loop() {
 				++j;
 				startbit = true;
 				if (j > 1) {
+					Serial.println((String)" 36 bit send *" + j);
 					j = 0;
-					Serial.println(" 36 bit send *2 ");
 					for (byte i = 0; i < 36; i++) {
 						Serial.print(_bl999_GetbitfromDataArray(i));
 					}
 					Serial.println();
-					Serial.println((String) "CEHCOP AM2320:  T=" + sensor.tem + "*C, PH=" + sensor.hum + "%");
+					sensor.read();												//  read data from sensor
+					int temperature = (int)10 * sensor.tem;
+					int humidity = (int)sensor.hum;
+
+					bl999_data[3] = (int)(temperature & 15);
+					bl999_data[4] = (int)((temperature & 240) >> 4);
+					bl999_data[5] = (int)((temperature & 3840) >> 8);
+					bl999_data[6] = (int)(humidity & 15);
+					bl999_data[7] = (int)((humidity & 240) >> 4);
+
+					Serial.println((String) "CEHCOP AM2320:  T=" + temperature + "*C, PH=" + humidity + "%");
 					delay(30000);
 				}
 			}
