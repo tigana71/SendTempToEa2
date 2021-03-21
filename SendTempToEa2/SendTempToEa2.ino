@@ -39,12 +39,13 @@ static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 unsigned long timing = 0;
 unsigned long timingtocompare = 0;
-int pulseis = LOW;
+int pulseis = HIGH;
 static volatile unsigned long timelenth = 0;
-int bitnumber = 35;
+int bitnumber = 36;
 boolean startbit = false;
 boolean endbit = false;
-int j = 0;
+int j = 4;
+int sum = 0;
 int temperature = 0;
 int humidity = 0;
 
@@ -55,29 +56,9 @@ void setup() {
 	// CANNEL NUMBER AND PowerID
 	randomSeed(analogRead(RANDOM_POWER_ID_PIN));
 	int PowerID = random(1, 64);
-	Serial.println((String) "Channel = " + CHANNEL + "   PowerID = " + PowerID);
 	bl999_data[0] = PowerID >> 2;	
 	bl999_data[1] = (((PowerID << 2) | (CHANNEL << 1) | (CHANNEL >> 1)) & 15);
-	bl999_data[2] = 0;											//battery condition OK
-	sensor.read();		//  read data from sensor
-	sensor.read();		//  read data from sensor
-	temperature = 10 * sensor.tem;
-	humidity = sensor.hum - 100;
-	bl999_data[3] = (temperature & 15);
-	bl999_data[4] = ((temperature & 240) >> 4);
-	bl999_data[5] = ((temperature & 3840) >> 8);
-	bl999_data[6] = (humidity & 15);
-	bl999_data[7] = ((humidity & 240) >> 4);
-	//Serial.println((String) "CEHCOP AM2320:  T=" + temperature + "/10*C, PH=" + (100 - humidity) + "%");
-	// check sum
-	int sum = 0;
-	for (byte i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
-		sum += bl999_data[i];
-	}
-	sum &= 15;	// clear higher bits
-	bl999_data[BL999_DATA_ARRAY_SIZE - 1] = sum;	//calculat check s
-
-	
+	bl999_data[2] = 0;											//battery condition OK	
 }
 
 void loop() {
@@ -89,8 +70,7 @@ void loop() {
 			if (bitnumber > 35) {
 				timelenth = BL999_START_BIT_LENGTH;
 				bitnumber = -1;
-				++j;	
-				
+				++j;				
 			}
 			else {
 				if (_bl999_GetbitfromDataArray(bitnumber) == 0) {
@@ -117,16 +97,14 @@ void loop() {
 			bl999_data[4] = ((temperature & 240) >> 4);
 			bl999_data[5] = ((temperature & 3840) >> 8);
 			bl999_data[6] = (humidity & 15);
-			bl999_data[7] = ((humidity & 240) >> 4);
-			//Serial.println((String) "CEHCOP AM2320:  T=" + temperature + "/10*C, PH=" + (100 - humidity) + "%");
-			// check sum
-			int sum = 0;
+			bl999_data[7] = ((humidity & 240) >> 4);			
+			sum = 0;
 			for (byte i = 0; i < BL999_DATA_ARRAY_SIZE - 1; i++) {
 				sum += bl999_data[i];
 			}
 			sum &= 15;	// clear higher bits
 			bl999_data[BL999_DATA_ARRAY_SIZE - 1] = sum;	//calculat check s
-			timelenth = BL999_30_SEC_LENGTH;
+			timelenth = BL999_30_SEC_LENGTH;			
 		}
 	}
 }	
@@ -137,13 +115,13 @@ byte _bl999_GetbitfromDataArray(byte bitNumber) {
 	return (bl999_data[dataArrayIndex] >> bitInNibble) & 1 ;
 }
 
-void stamp() {
-	Serial.print(pulseis);
-	Serial.print(bitnumber);
-	Serial.println(j);
+//void stamp() {
+	//Serial.print(pulseis);
+	//Serial.print(bitnumber);
+	//Serial.println(j);
 	//Serial.println((String) "pulse is " + pulseis + "timing "+ (timing - timingtocompare) +" bitnumber " + bitnumber + " j " + j + " VAlue " + _bl999_GetbitfromDataArray(bitnumber)+"timelenth"+timelenth);
 	//Serial.println((String)  "timing "+ (timing - timingtocompare) +" timelenth "+ timelenth);
-}
+//}
 
 		
 
