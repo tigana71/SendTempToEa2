@@ -86,6 +86,7 @@ void loop() {
 	timing = micros();
 	if ((timing - timingtocompare) > timelenth ) {
 		timingtocompare = timing;
+
 		if (pulseis == HIGH) {
 			if (bitnumber > 35) {
 				timelenth = BL999_START_BIT_LENGTH;
@@ -102,7 +103,7 @@ void loop() {
 			}
 		}
 		else { 
-			timelenth = 		
+			timelenth = BL999_DIVIDER_PULSE_LENGTH;
 			++bitnumber;			
 		}
 		// Инвертируем pulseis
