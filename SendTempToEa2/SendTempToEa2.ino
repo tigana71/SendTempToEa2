@@ -33,7 +33,7 @@ iarduino_AM2320 sensor;									//  iarduino_AM2320
 #define BL999_BITS_PER_PACKET 4
 
 //for BL999 channel nmber only from 1 to 3
-#define CHANNEL 2
+#define CHANNEL 3
 
 static byte bl999_data[BL999_DATA_ARRAY_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
